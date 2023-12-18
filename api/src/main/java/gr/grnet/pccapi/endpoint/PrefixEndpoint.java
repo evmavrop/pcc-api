@@ -1,10 +1,6 @@
 package gr.grnet.pccapi.endpoint;
 
-import gr.grnet.pccapi.dto.APIResponseMsg;
-import gr.grnet.pccapi.dto.PartialPrefixDto;
-import gr.grnet.pccapi.dto.PrefixDto;
-import gr.grnet.pccapi.dto.PrefixResponseDto;
-import gr.grnet.pccapi.dto.ProviderResponseDTO;
+import gr.grnet.pccapi.dto.*;
 import gr.grnet.pccapi.service.PrefixService;
 import gr.grnet.pccapi.service.StatisticsService;
 import java.text.ParseException;
@@ -293,5 +289,43 @@ public class PrefixEndpoint {
           String id) {
     var count = statisticsService.getPrefixStatisticsByID(id);
     return Response.ok().entity(count).build();
+  }
+
+  @Operation(
+      summary = "Set Statistics  for a particular Prefix.",
+      description =
+          "Passing the unique Prefix ID, you can set statistics for the particular Prefix.")
+  @APIResponse(
+      responseCode = "200",
+      description = "The statistics for the particular Prefix.",
+      content =
+          @Content(
+              schema = @Schema(type = SchemaType.OBJECT, implementation = StatisticsDto.class)))
+  @APIResponse(
+      responseCode = "404",
+      description = "Prefix not Found.",
+      content =
+          @Content(
+              schema = @Schema(type = SchemaType.OBJECT, implementation = APIResponseMsg.class)))
+  @POST
+  @Path("/{id}/statistics")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response setStatisticsByPrefix(
+      @Parameter(
+              description = "The Prefix Name for which the statistics will be retrieved.",
+              required = true,
+              example = "123.122",
+              schema = @Schema(type = SchemaType.STRING))
+          @PathParam("id")
+          String id,
+      @Parameter(
+              description = "The Statistics of the prefix",
+              required = true,
+              schema = @Schema(type = SchemaType.OBJECT))
+          @RequestBody
+          StatisticsRequestDto statisticsRequestDto) {
+       var resp = statisticsService.setPrefixStatistics(id, statisticsRequestDto);
+
+    return Response.ok().entity(resp).build();
   }
 }

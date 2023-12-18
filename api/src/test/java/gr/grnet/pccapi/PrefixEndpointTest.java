@@ -14,6 +14,7 @@ import gr.grnet.pccapi.repository.DomainRepository;
 import gr.grnet.pccapi.repository.PrefixRepository;
 import gr.grnet.pccapi.repository.ProviderRepository;
 import gr.grnet.pccapi.repository.ServiceRepository;
+import gr.grnet.pccapi.service.PrefixService;
 import gr.grnet.pccapi.service.StatisticsService;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
@@ -38,6 +39,7 @@ public class PrefixEndpointTest {
   @Inject ProviderRepository providerRepository;
   @Inject ServiceRepository serviceRepository;
   @InjectMock StatisticsService statisticsService;
+
 
   @BeforeEach
   @Transactional
@@ -689,5 +691,42 @@ public class PrefixEndpointTest {
             .then()
             .assertThat()
             .statusCode(404);
+  }
+
+
+  @Test
+  public void testPrefixStatistics() {
+    var statisticsDto=new StatisticsDto();
+    statisticsDto.prefix="test";
+    statisticsDto.handlesCount=10;
+    statisticsDto.resolvableCount=1;
+    statisticsDto.unresolvableCount=1;
+    statisticsDto.uncheckedCount=8;
+
+    //Mockito.when(mockedPrefixRepository.existsByName(any())).thenReturn(true);
+    //Mockito.when(mockedPrefixRepository.existsByName(any())).thenReturn(true);
+    Mockito.when(statisticsService.setPrefixStatistics(any(),any())).thenReturn(statisticsDto);
+
+    var dto=new StatisticsRequestDto()
+            .setHandlesCount(10)
+            .setResolvableCount(1)
+            .setUnresolvableCount(1)
+            .setUncheckedCount(8);
+    var resp =
+            given()
+                    .body(dto)
+                    .contentType(ContentType.JSON)
+                    .post("/{id}/statistics","test")
+                    .then()
+                    .assertThat()
+                    .statusCode(200)
+                    .extract()
+                    .as(StatisticsDto.class);
+
+    assertEquals(resp.handlesCount,dto.handlesCount);
+    assertEquals(statisticsDto.prefix,statisticsDto.prefix);
+    assertEquals(resp.resolvableCount,dto.resolvableCount);
+    assertEquals(resp.uncheckedCount,dto.uncheckedCount);
+
   }
 }
